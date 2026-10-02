@@ -1,0 +1,39 @@
+name: Enterprise API Quality CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Run API quality suite
+        run: mvn --batch-mode clean test
+
+      - name: Upload TestNG/Surefire evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: |
+            target/surefire-reports/
+            test-output/
+          if-no-files-found: ignore
+          retention-days: 14
